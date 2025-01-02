@@ -83,14 +83,14 @@ const EditorExtensions = ({ editor }) => {
         })
 
 
-        const prompt = `
-        For question: ${selectedText} and with the given content as answer, please provide an appropriate answer in HTML format. The answer content is:
-        
-        <html>
-          <body>
-            ${ans}
-          </body>
-        </html>`
+        const prompt = `Using the selected question: ${selectedText} as the title and the provided content as the answer, generate a well-structured HTML response. The HTML should adhere to best practices and maintain proper formatting. The answer content is:
+
+<html>
+  <body>
+    ${ans}
+  </body>
+</html>
+Ensure the body of the response is coherent and logically structured, avoiding unexpected or irrelevant content.`
 
 
         console.log(ans);

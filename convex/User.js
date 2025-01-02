@@ -91,37 +91,41 @@ export const upgradeUserPlan = mutation({
 
 
 
-export const useTokens = mutation({
+
+export const deductTokens = mutation({
     args: {
-        email: v.string(),
-        tokenCount: v.number(), // Number of tokens to deduct
+        email: v.string(),     // User's email  
+        tokenCount: v.number(), // Number of tokens to deduct  
     },
     handler: async (ctx, args) => {
-        // Query the userTokens table for the user's record
-        const userTokens = await ctx.db.query("userTokens")
-            .filter(q => q.eq(q.field("email"), args.email))
-            .first();
+        // Find the user's record by email  
+        const user = await ctx.db.query('users').filter(q => q.eq(q.field('email'), args.email)).first();
 
-        if (!userTokens) {
-            throw new Error("User not found or no tokens available");
+        // Check if the user record exists  
+        if (!user) {
+            throw new Error("User not found.");
         }
 
-        // Check if there are sufficient tokens
-        if (userTokens.tokenCount < args.tokenCount) {
-            throw new Error("Insufficient tokens");
+        // Check if there are enough tokens available for deduction  
+        if (user.tokens < args.tokenCount) {
+            throw new Error(`Insufficient tokens. Available: ${user.tokens}, Requested: ${args.tokenCount}.`);
         }
 
-        // Deduct the tokens
-        const updatedTokenCount = userTokens.tokenCount - args.tokenCount;
+        // Calculate the updated token count  
+        const updatedTokenCount = user.tokens - args.tokenCount;
 
-        // Update the token count in the database
-        await ctx.db.patch(userTokens._id, {
-            tokenCount: updatedTokenCount,
+        // Update the user's token count in the database  
+        await ctx.db.patch(user._id, {
+            tokens: updatedTokenCount,
         });
 
+        // Return a success message  
         return `Successfully used ${args.tokenCount} tokens. Remaining tokens: ${updatedTokenCount}.`;
     },
 });
+
+
+
 
 
 

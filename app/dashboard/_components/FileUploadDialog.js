@@ -9,6 +9,7 @@ import { api } from "../../../convex/_generated/api";
 import { v4 as uuidv4 } from 'uuid';
 import { useUser } from '@clerk/nextjs';
 import axios from 'axios'
+import { useTokens } from '../../../convex/User';
 
 const FileUploadDialog = ({ isOpen, onClose, children }) => {
 
@@ -16,6 +17,7 @@ const FileUploadDialog = ({ isOpen, onClose, children }) => {
     const getFileUrl = useMutation(api.fileStorage.getFileUrl);
     const send = useMutation(api.fileStorage.addFileToDb);
     const embeddedDocument = useAction(api.myActions.ingest)
+    const deductTokens = useMutation(api.User.deductTokens);
     const { user } = useUser()
     const [fileName, setFileName] = useState('');
     const [file, setFile] = useState(null);
@@ -32,12 +34,7 @@ const FileUploadDialog = ({ isOpen, onClose, children }) => {
     const useToken = useMutation(api.User.useTokens);
 
 
-    useEffect(() => {
-        if (userQuery) {
-            setSelectedPlan(userQuery[0]?.plan);
-            setUserTokens(userQuery[0]?.tokens);
-        }
-    }, [userQuery]);
+
 
     const handleFileChange = (event) => {
         setFile(event.target.files[0]);
@@ -71,8 +68,10 @@ const FileUploadDialog = ({ isOpen, onClose, children }) => {
 
         // Step 3: Save the newly allocated storage id to the database
         const fileId = uuidv4();
-
-        await useToken({ email: user?.primaryEmailAddress?.emailAddress, tokenCount: userTokens - 1 });
+        await deductTokens({
+            email: user?.primaryEmailAddress?.emailAddress,
+            tokenCount: 1, // Deduct one token
+        });
 
         await send({
             fileId,
